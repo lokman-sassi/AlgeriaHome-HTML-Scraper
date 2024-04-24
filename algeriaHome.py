@@ -1,7 +1,6 @@
 from lxml import html
 from bs4 import BeautifulSoup
 import requests
-import json
 import pymongo
 
 
@@ -26,6 +25,7 @@ def scrape_listing_details(url):
 
         # Extracting published date
         published_date = tree.xpath('//*[@id="item-content"]/ul/li[2]/text()')[1]
+        date = published_date.replace(" Published date: ", "")
 
         # Extracting Description
         description_list = tree.xpath('//*[@id="description"]/p/text()')
@@ -51,7 +51,7 @@ def scrape_listing_details(url):
         print("Description:", description)
         print("Images:", image_urls)
         print("Source:", source)
-        print(published_date)
+        print("Date:", date)
         print("Link:", url)
         print("Category:", category[1].strip())
         print("Surface", surface)
@@ -64,7 +64,7 @@ def scrape_listing_details(url):
             "Description": description,
             "Images": image_urls,
             "Source": source,
-            "Published Date": published_date,
+            "Date": date,
             "Link": url,
             "Category": category[1].strip(),
             "Surface": surface
@@ -112,7 +112,7 @@ def save_to_database(records):
                 
         for record in records:
             if record['Link'] in existing_urls:
-                break
+                continue
             else:
                 information.insert_one(record)
     
