@@ -2,9 +2,11 @@ from lxml import html
 from bs4 import BeautifulSoup
 import requests
 import json
+import pymongo
 
 
 all_listings_data = []
+
 
 # Function to scrape listing details from a given link
 def scrape_listing_details(url):
@@ -36,6 +38,9 @@ def scrape_listing_details(url):
         image_urls = tree.xpath("//div[@class='thumbs-image']/a/@href")
         if not image_urls:
             image_urls = "No images were found"
+
+        source = "Algeria Home"
+        surface = None
     
 
 
@@ -45,10 +50,11 @@ def scrape_listing_details(url):
         print("Location:", location)
         print("Description:", description)
         print("Images:", image_urls)
-        print("Source: Algeria Home")
+        print("Source:", source)
         print(published_date)
         print("Link:", url)
         print("Category:", category[1].strip())
+        print("Surface", surface)
         print("-" * 50)
 
         listing_data = {
@@ -57,9 +63,11 @@ def scrape_listing_details(url):
             "Location": location,
             "Description": description,
             "Images": image_urls,
+            "Source": source,
             "Published Date": published_date,
             "Link": url,
-            "Category": category[1].strip()
+            "Category": category[1].strip(),
+            "Surface": surface
             }
         all_listings_data.append(listing_data)
 
@@ -92,10 +100,24 @@ def scraping_listings_urls(page_url):
         print("Error while scrapinf listings urls: ", str(e))
 
 
-# Function to save the scraped data to a file in JSON format
-def save_data():
-    with open('AlgeriaHome.json', 'w', encoding='utf-8') as json_file:
-        json.dump(all_listings_data, json_file, ensure_ascii=False, indent=4)
+# Function that stores the announcements in the data base
+def save_to_database(records):
+    client = pymongo.MongoClient('mongodb://localhost:27017')
+    mydb = client["Real-Estate"]
+    information = mydb.RealEstateListing
+    if information is not None:
+        existing_urls = []
+        for record in information.find():
+            existing_urls.append(record['Link'])
+                
+        for record in records:
+            if record['Link'] in existing_urls:
+                break
+            else:
+                information.insert_one(record)
+    
+    else:
+        information.insert_many(records)
 
 
 # The main function to be executed
@@ -110,14 +132,16 @@ def main():
         response  = requests.get(page_url)
         tree = html.fromstring(response.content)
         endOfListingsMessage = tree.xpath('//*[@id="main"]/div/div[2]/div[2]/p/text()')
-
-        if endOfListingsMessage:
-            break
-        else:
-            scraping_listings_urls(page_url)
-            page+=1
         
-        save_data()
+        try:  
+            if endOfListingsMessage:
+                break
+            else:
+                scraping_listings_urls(page_url)
+                page+=1
+        
+        finally:
+            save_to_database(all_listings_data)
         
         
 if __name__ == "__main__":
