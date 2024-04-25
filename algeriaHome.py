@@ -142,6 +142,7 @@ def main():
         
         finally:
             save_to_database(all_listings_data)
+            print("Scraped items: ", len(all_listings_data))
         
         
 if __name__ == "__main__":
