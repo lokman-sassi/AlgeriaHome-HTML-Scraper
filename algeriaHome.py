@@ -48,7 +48,7 @@ def scrape_listing_details(url):
         print("Title:", title)
         print("Price:", price)
         print("Location:", location)
-        print("Description:", description)
+        print("Description:", description.replace('\n', ''))
         print("Images:", image_urls)
         print("Source:", source)
         print("Date:", date)
@@ -61,7 +61,7 @@ def scrape_listing_details(url):
             "Title": title,
             "Price": price,
             "Location": location,
-            "Description": description,
+            "Description": description.replace('\n', ''),
             "Images": image_urls,
             "Source": source,
             "Date": date,
@@ -123,7 +123,7 @@ def save_to_database(records):
 # The main function to be executed
 def main():
 
-    listing_category = "maison-appartement-a-vendre"  # it can be: A vendre:["maison-appartement-a-vendre", "autres_1", "studio"] A louer["maison-appartement-a-louer", "chambres-a-louer-studio", "villa-a-louer"]
+    listing_category = "maison-appartement-a-louer"  # it can be: A vendre:["maison-appartement-a-vendre", "autres_1", "studio"] A louer["maison-appartement-a-louer", "chambres-a-louer-studio", "villa-a-louer"]
     base_url = f'https://www.algeriahome.com/{listing_category}'
     page = 1
 
@@ -147,6 +147,3 @@ def main():
         
 if __name__ == "__main__":
     main()
-
-    
-
